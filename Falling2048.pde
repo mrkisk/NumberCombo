@@ -21,7 +21,7 @@ boolean isTwo; // 2個かどうか
 int scene; // 0でスタート画面、1でゲーム画面、2でスコア表示
 int[] hiscore = {0, 0}; // ハイスコア、こいつだけ初期化しない
 int difficulty; // 0はeasy、1はhard
-boolean spacekey = false; // スペースキーが押されてるときにtrue、押されてないときにfalse
+boolean spaceKey = false; // スペースキーが押されてるときにtrue、押されてないときにfalse
 int combo;
 
 void setup() {
@@ -55,8 +55,8 @@ void keyPressed() { // キーが押されたタイミングで割込み処理（
         if (keyCode == LEFT || keyCode == RIGHT) { // 右か左を押すとゲーム開始
             scene = 1;
             //clearLcd();
-            if (difficulty == 0) speed = speedEasy;
-            if (difficulty == 1) speed = speedHard;
+            if (difficulty == 0) speed = SPEEDEASY;
+            if (difficulty == 1) speed = SPEEDHARD;
         }
     } else if (scene == 1) {
         if (canMove) {
@@ -104,23 +104,26 @@ void keyPressed() { // キーが押されたタイミングで割込み処理（
             }
         }
     } else if (scene == 2) {
-        if (timer > 10) if (keyCode == UP || keyCode == DOWN || keyCode == LEFT || keyCode == RIGHT) { // 上下左右入力でシーン0へ //変更点
-            initialize();
+        if (timer > 10) {
+            if (keyCode == UP || keyCode == DOWN || keyCode == LEFT || keyCode == RIGHT) { // 任意のキー入力でシーン0へ
+                initialize();
+            }
         }
     }
-    if (key == ' ') spacekey = true;
+    if (key == ' ') spaceKey = true;
 }
 
 void keyReleased() { // キーが離れたときの割込み
-    if (key == ' ') spacekey = false;
+    if (key == ' ') {
+        spaceKey = false;
+    }
 }
 
 void draw() { // 0.1秒おき
     if (scene == 0) {
-        drawing();
     } else if (scene == 1) {
         timer++;
-        if (spacekey && canMove) { // 落とすスピードを上げる
+        if (spaceKey && canMove) { // 落とすスピードを上げる
             while (canFall()) x--;
             timer = int(timer / speed) * speed;
         }
@@ -130,9 +133,9 @@ void draw() { // 0.1秒おき
                     x--;
                 } else { // 確定する
                     canMove = false;
-                    combo = 0; //変更点
+                    combo = 0;
                     stack[x][y] = num;
-                    priority[x][y] = 2; // 吸収されるように落ちたやつ自身の優先度を上げる
+                    priority[x][y] = 2; // 吸収されるように落ちた数字の優先度を上げる
                     if (isTwo) {
                         doFall = true; // 2個の場合は先に落とす
                         if (rot == 0) {
@@ -155,11 +158,11 @@ void draw() { // 0.1秒おき
                     synth();
                     updatePriority();
                     if (!didSynth) { // 合成が無かったら
-                        initialMove();
+                        initializeMove();
                         // println("Score : " + score);
-                        if (stack[WIDTHG - 2][1] != 0) { //変更点
+                        if (stack[WIDTHG - 2][1] != 0) {
                             scene = 2;
-                            timer = 0; //変更点
+                            timer = 0;
                         }
                     }
                 } else { // 落とすなら
@@ -168,13 +171,12 @@ void draw() { // 0.1秒おき
             }
         }
         apply();
-        scene1Apply(); //変更点
-        drawing();
+        scene1Apply();
     } else if (scene == 2) {
-        timer++; //変更点
+        timer++;
         changeToScene2();
-        drawing();
     }
+    display();
 }
 
 boolean canFall() { // 左隣にブロックがなければfalse、あればtrue
@@ -213,15 +215,15 @@ void synth() { // 合成処理
             if (maxP >= 0) { // 消すやつがあったとき
                 didSynth = true;
                 combo++;
-                if (stack[i][j] == 7) speed = 2 - difficulty; //変更点
+                if (stack[i][j] == 7) speed = 2 - difficulty;
                 if (stack[i][j] == 9) { // 消すやつが9のとき
-                    // speed = 2 - difficulty; // speedを変える //変更点
+                    // speed = 2 - difficulty; // speedを変える
                     score += pow(2, stack[i][j]);
                     stack[i][j] = 0;
                     priority[i][j] = 0;
                     if (!doFall && stack[i + 1][j] != 0) doFall = true;
                 } else { //消すやつが8以下のとき
-                    score += stack[i][j] * combo; //変更点
+                    score += stack[i][j] * combo;
                     maxNum = max(stack[i][j], maxNum);
                     if (maxNum >= th - 1) isTwo = true;
                     stack[i][j]++;
@@ -286,19 +288,21 @@ void printPriority() {
     println();
 }
 
-void initialMove() { // 次の数字が落ち始める直前の初期化
+void initializeMove() { // 次の数字が落ち始める直前の初期化
     canMove = true;
-    for (int i = 0; i < WIDTH; i++) for (int j = 0; j < HEIGHT; j++) {
-        priority[i][j] = 0;
-        nextPriority[i][j] = 0;
+    for (int i = 0; i < WIDTH; i++) {
+        for (int j = 0; j < HEIGHT; j++) {
+            priority[i][j] = 0;
+            nextPriority[i][j] = 0;
+        }
     }
-    x = WIDTHG - 2; //変更点
+    x = WIDTHG - 2;
     y = 1;
     rot = 0;
     changeNum();
     doFall = false;
     didSynth = false;
-    // combo = 0; //変更点
+    // combo = 0;
 }
 
 void changeNum() { // 落ちる数字の乱数調整
@@ -336,7 +340,7 @@ void apply() { // 自身と落ちた数字の盤面からlcdを書き換え
     }
 }
 
-void scene1Apply() { //変更点
+void scene1Apply() {
     lcd[14][0] = '|';
     lcd[14][1] = '|';
     lcd[14][2] = '|';
@@ -359,8 +363,8 @@ void scene1Apply() { //変更点
     lcd[19][3] = char(int(combo % 10) + 48);
 }
 
-void drawing() { // lcdの描画
-    // if (combo != 0) lcd[19][3] = char(combo + 48); //変更点
+void display() { // lcdの描画
+    // if (combo != 0) lcd[19][3] = char(combo + 48);
     background(255);
     strokeWeight(2);
     for (int i = 0; i <= WIDTH; i++) line(50 + 50 * i, 50, 50 + 50 * i, 450);
@@ -403,7 +407,7 @@ void initialize() { // シーン1での値の初期化
     lcd[10][3] = 'R';
     lcd[11][3] = 'D';
     speed = 2;
-    x = WIDTHG - 2; //変更点
+    x = WIDTHG - 2;
     y = 1;
     rot = 0;
     num = 1;
