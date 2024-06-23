@@ -3,6 +3,7 @@ final int HEIGHT = 4; // 縦のマスの数
 final int WIDTHG = 14; // ゲーム画面の横のマスの数
 final int SPEED[] = {3, 2}; // 落ちるスピード
 final int SPEEDUPNUM = 8; // この数値以上の数値ができるとスピードが速くなる
+final int TWONUM = 5; // この数値以上の数値ができると2個になる
 
 final int dx4[] = {1, 0, -1, 0};
 final int dy4[] = {0, -1, 0, 1};
@@ -19,7 +20,6 @@ boolean didSynth; // 合成をしたかどうか
 int maxNum; // 最大の数値-1
 int timer; // タイマー
 int score; // スコア
-int th; // 2個に変わる閾値
 boolean isTwo; // 2個かどうか
 int scene; // 0でスタート画面、1でゲーム画面、2でスコア表示
 int[] hiscore = {0, 0}; // ハイスコア、こいつだけ初期化しない
@@ -179,7 +179,6 @@ void synth() { // 合成処理
             if (dir >= 0) { // 消すやつがあったとき
                 didSynth = true;
                 combo++;
-                if (stack[i][j] == SPEEDUPNUM - 1) speed = SPEED[difficulty] - 1;
                 if (stack[i][j] == 9) { // 消すやつが9のとき
                     score += pow(2, stack[i][j]);
                     stack[i][j] = 0;
@@ -187,11 +186,12 @@ void synth() { // 合成処理
                     if (!doFall && stack[i + 1][j] > 0) doFall = true;
                 } else { //消すやつが8以下のとき
                     score += stack[i][j] * combo;
-                    maxNum = max(stack[i][j], maxNum);
-                    if (maxNum >= th - 1) isTwo = true;
                     stack[i][j]++;
                     priority[i][j] = -1;
                     nextPriority[i][j] = 2;
+                    maxNum = max(stack[i][j], maxNum);
+                    if (maxNum >= TWONUM) isTwo = true;
+                    if (maxNum >= SPEEDUPNUM) speed = SPEED[difficulty] - 1;
                 }
                 // 数字を消し、落とすかを判定
                 int nx = i + dx4Prirority[dir];
@@ -359,7 +359,6 @@ void initialize() { // シーン1での値の初期化
     maxNum = 1;
     timer = 0;
     score = 0;
-    th = 5;
     isTwo = false;
     scene = 0;
     combo = 0;
