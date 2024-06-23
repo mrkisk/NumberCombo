@@ -1,8 +1,11 @@
 final int WIDTH = 20; // 横のマスの数
 final int HEIGHT = 4; // 縦のマスの数
 final int WIDTHG = 14; // ゲーム画面の横のマスの数
-final int SPEEDEASY = 3;
-final int SPEEDHARD = 2;
+final int SPEED[] = {3, 2}; // 落ちるスピード
+final int SPEEDUPNUM = 8; // この数値以上の数値ができるとスピードが速くなる
+
+final int dx4[] = {1, 0, -1, 0};
+final int dy4[] = {0, -1, 0, 1};
 
 int[][] stack = new int[WIDTH][HEIGHT]; // 既に落ちている数字
 char[][] lcd = new char[WIDTH][HEIGHT]; // lcdに出力する文字
@@ -36,6 +39,9 @@ void clearLcd() { // lcdをまっさらに
     }
 }
 
+int getStack(int x, int y) { return (x >= 0 && x < WIDTHG && y >= 0 && y < HEIGHT) ? stack[x][y] : -1; }
+boolean isStackEmpty(int x, int y) { return getStack(x, y) == 0; }
+
 void keyPressed() { // キーが押されたタイミングで割込み処理（描画なし）
     if (scene == 0) {
         if (keyCode == UP) { // 上を押すとeasyにカーソル移動
@@ -55,50 +61,31 @@ void keyPressed() { // キーが押されたタイミングで割込み処理（
         if (keyCode == LEFT || keyCode == RIGHT) { // 右か左を押すとゲーム開始
             scene = 1;
             //clearLcd();
-            if (difficulty == 0) speed = SPEEDEASY;
-            if (difficulty == 1) speed = SPEEDHARD;
+            speed = SPEED[difficulty];
         }
     } else if (scene == 1) {
         if (canMove) {
             if (keyCode == UP) { // 上移動
-                if (rot == 0 || rot == 3) {
-                    if (y > 0 && stack[x][y - 1] == 0) y--;
-                } else if (rot == 1) {
-                    if (y > 1 && stack[x][y - 2] == 0) y--;
-                } else if (rot == 2) {
-                    if (y > 0 && stack[x - 1][y - 1] == 0) y--;
+                if (isStackEmpty(x, y - 1) && isStackEmpty(x + dx4[rot], y + dy4[rot] - 1)) {
+                    y--;
                 }
             }
             if (keyCode == DOWN) { // 下移動
-                if (rot == 0 || rot == 1) {
-                    if (y < 3 && stack[x][y + 1] == 0) y++;
-                } else if (rot == 2) {
-                    if (y < 3 && stack[x - 1][y + 1] == 0) y++;
-                } else if (rot == 3) {
-                    if (y < 2 && stack[x][y + 2] == 0) y++;
+                if (isStackEmpty(x, y + 1) && isStackEmpty(x + dx4[rot], y + dy4[rot] + 1)) {
+                    y++;
                 }
             }
             if (isTwo) {
                 if (keyCode == LEFT) { // 反時計回り回転
-                    if (rot == 0) {
-                        if (y > 0 && stack[x][y - 1] == 0) rot = 1;
-                    } else if (rot == 1) {
-                        if (stack[x - 1][y] == 0) rot = 2;
-                    } else if (rot == 2) {
-                        if (y < 3 && stack[x][y + 1] == 0) rot = 3;
-                    } else if (rot == 3) {
-                        if (stack[x + 1][y] == 0) rot = 0;
+                    int nextRot = (rot + 1) % 4;
+                    if (isStackEmpty(x + dx4[nextRot], y + dy4[nextRot])) {
+                        rot = nextRot;
                     }
                 }
                 if (keyCode == RIGHT) { // 時計回り回転
-                    if (rot == 0) {
-                        if (y < 3 && stack[x][y + 1] == 0) rot = 3;
-                    } else if (rot == 1) {
-                        if (stack[x + 1][y] == 0) rot = 0;
-                    } else if (rot == 2) {
-                        if (y > 0 && stack[x][y - 1] == 0) rot = 1;
-                    } else if (rot == 3) {
-                        if (stack[x - 1][y] == 0) rot = 2;
+                    int nextRot = (rot + 3) % 4;
+                    if (isStackEmpty(x + dx4[nextRot], y + dy4[nextRot])) {
+                        rot = nextRot;
                     }
                 }
             }
@@ -138,19 +125,8 @@ void draw() { // 0.1秒おき
                     priority[x][y] = 2; // 吸収されるように落ちた数字の優先度を上げる
                     if (isTwo) {
                         doFall = true; // 2個の場合は先に落とす
-                        if (rot == 0) {
-                            stack[x + 1][y] = num2;
-                            priority[x + 1][y] = 2;
-                        } else if (rot == 1) {
-                            stack[x][y - 1] = num2;
-                            priority[x][y - 1] = 2;
-                        } else if (rot == 2) {
-                            stack[x - 1][y] = num2;
-                            priority[x - 1][y] = 2;
-                        } else {
-                            stack[x][y + 1] = num2;
-                            priority[x][y + 1] = 2;
-                        }
+                        stack[x + dx4[rot]][y + dy4[rot]] = num2;
+                        priority[x + dx4[rot]][y + dy4[rot]] = 2;
                     }
                 }
             } else { // 吸収したり落としたりする処理
@@ -160,7 +136,7 @@ void draw() { // 0.1秒おき
                     if (!didSynth) { // 合成が無かったら
                         initializeMove();
                         // println("Score : " + score);
-                        if (stack[WIDTHG - 2][1] != 0) {
+                        if (stack[WIDTHG - 2][1] > 0) { // ゲームオーバー判定
                             scene = 2;
                             timer = 0;
                         }
@@ -180,48 +156,35 @@ void draw() { // 0.1秒おき
 }
 
 boolean canFall() { // 左隣にブロックがなければfalse、あればtrue
-    if (!isTwo) {
-        return x > 0 && stack[x - 1][y] == 0;
-    } else {
-        if (rot == 0) return x > 0 && stack[x - 1][y] == 0;
-        else if (rot == 1) return x > 0 && stack[x - 1][y] == 0 && stack[x - 1][y - 1] == 0;
-        else if (rot == 2) return x - 1 > 0 && stack[x - 2][y] == 0;
-        else return x > 0 && stack[x - 1][y] == 0 && stack[x - 1][y + 1] == 0;
-    }
+    return isStackEmpty(x - 1, y) && (!isTwo || isStackEmpty(x - 1 + dx4[rot], y + dy4[rot]));
 }
 
 void synth() { // 合成処理
     didSynth = false;
+    int dx4Prirority[] = {-1, 0, 0, 1};
+    int dy4Prirority[] = {0, -1, 1, 0};
     for (int k = 2; k > 0; k--) for (int j = 0; j < HEIGHT; j++) for (int i = 0; i < WIDTH; i++) {
         if (priority[i][j] == k) {
             // 隣接する同じ数字の中で最も優先度の高い物を合成する
-            int maxP = -1;
-            int dir = 0;
-            if (i > 0 && stack[i - 1][j] == stack[i][j]) {
-                maxP = priority[i - 1][j];
+            int maxPriority = -1;
+            int dir = -1;
+            for (int l = 0; l < 4; l++) {
+                int nx = i + dx4Prirority[l];
+                int ny = j + dy4Prirority[l];
+                if (getStack(nx, ny) == stack[i][j] && priority[nx][ny] > maxPriority) {
+                    dir = l;
+                    maxPriority = priority[nx][ny];
+                }
             }
-            if (j > 0 && stack[i][j - 1] == stack[i][j] && priority[i][j - 1] > maxP) {
-                dir = 1;
-                maxP = priority[i][j - 1];
-            }
-            if (j < HEIGHT - 1 && stack[i][j + 1] == stack[i][j] && priority[i][j + 1] > maxP) {
-                dir = 2;
-                maxP = priority[i][j + 1];
-            }
-            if (i < WIDTH - 1 && stack[i + 1][j] == stack[i][j] && priority[i + 1][j] > maxP) {
-                dir = 3;
-                maxP = priority[i + 1][j];
-            }
-            if (maxP >= 0) { // 消すやつがあったとき
+            if (dir >= 0) { // 消すやつがあったとき
                 didSynth = true;
                 combo++;
-                if (stack[i][j] == 7) speed = 2 - difficulty;
+                if (stack[i][j] == SPEEDUPNUM - 1) speed = SPEED[difficulty] - 1;
                 if (stack[i][j] == 9) { // 消すやつが9のとき
-                    // speed = 2 - difficulty; // speedを変える
                     score += pow(2, stack[i][j]);
                     stack[i][j] = 0;
                     priority[i][j] = 0;
-                    if (!doFall && stack[i + 1][j] != 0) doFall = true;
+                    if (!doFall && stack[i + 1][j] > 0) doFall = true;
                 } else { //消すやつが8以下のとき
                     score += stack[i][j] * combo;
                     maxNum = max(stack[i][j], maxNum);
@@ -230,22 +193,13 @@ void synth() { // 合成処理
                     priority[i][j] = -1;
                     nextPriority[i][j] = 2;
                 }
-                if (dir == 0) {
-                    stack[i - 1][j] = 0;
+                // 数字を消し、落とすかを判定
+                int nx = i + dx4Prirority[dir];
+                int ny = j + dy4Prirority[dir];
+                stack[nx][ny] = 0;
+                priority[nx][ny] = 0;
+                if (!doFall && stack[nx + 1][ny] > 0) {
                     doFall = true;
-                    priority[i - 1][j] = 0;
-                } else if (dir == 1) {
-                    stack[i][j - 1] = 0;
-                    if (!doFall && stack[i + 1][j - 1] != 0) doFall = true;
-                    priority[i][j - 1] = 0;
-                } else if (dir == 2) {
-                    stack[i][j + 1] = 0;
-                    if (!doFall && stack[i + 1][j + 1] != 0) doFall = true;
-                    priority[i][j + 1] = 0;
-                } else if (dir == 3) {
-                    stack[i + 1][j] = 0;
-                    if (!doFall && stack[i + 2][j] != 0) doFall = true;
-                    priority[i + 1][j] = 0;
                 }
             }
         }
@@ -253,9 +207,11 @@ void synth() { // 合成処理
 }
 
 void updatePriority() { // 優先度の更新
-    for (int i = 0; i < WIDTH; i++) for (int j = 0; j < HEIGHT; j++) {
-        priority[i][j] = nextPriority[i][j];
-        nextPriority[i][j] = 0;
+    for (int i = 0; i < WIDTH; i++) {
+        for (int j = 0; j < HEIGHT; j++) {
+            priority[i][j] = nextPriority[i][j];
+            nextPriority[i][j] = 0;
+        }
     }
 }
 
@@ -268,6 +224,7 @@ void fall() { // 落とす処理
             else if (countZero != 0) {
                 stack[i - countZero][j] = stack[i][j];
                 stack[i][j] = 0;
+                // 落とす数字の優先度を2ならば維持し、そうでなければ1にする
                 if (priority[i][j] == 2) {
                     priority[i - countZero][j] = 2;
                     priority[i][j] = 0;
@@ -276,16 +233,6 @@ void fall() { // 落とす処理
         }
     }
     doFall = false;
-}
-
-void printPriority() {
-    for (int j = 0; j < HEIGHT; j++) {
-        for (int i = 0; i < WIDTH; i++) {
-            print(priority[i][j] + " ");
-        }
-        println();
-    }
-    println();
 }
 
 void initializeMove() { // 次の数字が落ち始める直前の初期化
@@ -331,12 +278,7 @@ void apply() { // 自身と落ちた数字の盤面からlcdを書き換え
     }
     if (canMove) {
         lcd[x][y] = char(num + 48);
-        if (isTwo) {
-            if (rot == 0) lcd[x + 1][y] = char(num2 + 48);
-            else if (rot == 1) lcd[x][y - 1] = char(num2 + 48);
-            else if (rot == 2) lcd[x - 1][y] = char(num2 + 48);
-            else if (rot == 3) lcd[x][y + 1] = char(num2 + 48);
-        }
+        if (isTwo) lcd[x + dx4[rot]][y + dy4[rot]] = char(num2 + 48);
     }
 }
 
@@ -364,7 +306,6 @@ void scene1Apply() {
 }
 
 void display() { // lcdの描画
-    // if (combo != 0) lcd[19][3] = char(combo + 48);
     background(255);
     strokeWeight(2);
     for (int i = 0; i <= WIDTH; i++) line(50 + 50 * i, 50, 50 + 50 * i, 450);
