@@ -92,7 +92,7 @@ void keyPressed() { // キーが押されたタイミングで割込み処理（
         }
     } else if (scene == 2) {
         if (timer > 10) {
-            if (keyCode == UP || keyCode == DOWN || keyCode == LEFT || keyCode == RIGHT) { // 任意のキー入力でシーン0へ
+            if (keyCode == LEFT || keyCode == RIGHT) { // 左右キー入力でゲーム開始画面へ
                 initialize();
             }
         }
