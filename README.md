@@ -24,9 +24,9 @@ The game has two difficulty levels: EASY and HARD. In HARD mode, the speed of th
 
 Describe how to play the game:
 
-- Arrow Keys: Move the player up, down, left, or right.
-- R Key: Reset the game.
-- U Key: Undo the last move.
+- Left/Right Arrow Keys: Select, move numbers.
+- Up/Down Arrow Keys: Confirm, rotate numbers.
+- Space Key: Drop numbers.
 
 ## Installation and Usage
 
@@ -34,7 +34,7 @@ Download [Processing 4.3](https://processing.org/download/) and run this sketch 
 
 ## Notes
 
-
+a
 
 ## Author
 * Keisuke Morita
