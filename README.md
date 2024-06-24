@@ -34,7 +34,9 @@ Download [Processing 4.3](https://processing.org/download/) and run this sketch 
 
 ## Notes
 
-a
+![Demo](./assets/fpga.jpg)
+
+NumberCombo is created to verify the algorithm for developing a game console using an FPGA board, as shown in the picture above. Due to the display limitations of the FPGA board, alphanumeric characters are displayed in a 20x4 grid. To port this program to C language, it has been simplified without using class structures.
 
 ## Author
 * Keisuke Morita
