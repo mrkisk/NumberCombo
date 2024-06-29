@@ -41,6 +41,7 @@ void initialize() { // シーン1での値の初期化
     score = 0;
     isTwo = false;
     scene = 0;
+    difficulty = 0;
     combo = 0;
 }
 
