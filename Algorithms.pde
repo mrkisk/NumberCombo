@@ -100,6 +100,7 @@ void initializeMove() { // 次の数字が落ち始める直前の初期化
 
 void changeNum() { // 落ちる数字の乱数調整
     int sum = 0;
+    maxNum--;
     if (isTwo) maxNum--;
     for (int i = 1; i <= maxNum; i++) sum += pow(2, i);
     float rand = random(sum);
@@ -115,4 +116,5 @@ void changeNum() { // 落ちる数字の乱数調整
         num++;
         num2 = int(random(1, num));
     }
+    maxNum++;
 }
