@@ -2,7 +2,9 @@
 
 ## Overview
 
-Number Combo is a puzzle game where you control and stack numbers flowing from the right, combining identical numbers to create larger numbers. You can also play the game in your browser by clicking [here](https://mrkisk.github.io/numbercombo-game/) ([code](https://github.com/mrkisk/numbercombo-game)).
+Number Combo is a puzzle game where you control and stack numbers flowing from the right, combining identical numbers to create larger numbers.
+
+You can also play the game in your browser by clicking [here](https://mrkisk.github.io/numbercombo-game/) ([code](https://github.com/mrkisk/numbercombo-game)).
 
 ## DEMO
 
