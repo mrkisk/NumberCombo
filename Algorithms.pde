@@ -103,7 +103,7 @@ void changeNum() { // 落ちる数字の乱数調整
     maxNum--;
     if (isTwo) maxNum--;
     for (int i = 1; i <= maxNum; i++) sum += pow(2, i);
-    float rand = random(sum);
+    float rand = random(sum) - 0.0001;
     for (int i = maxNum; i > 0; i--) {
         if (rand < pow(2, i)) {
             num = maxNum + 1 - i;
