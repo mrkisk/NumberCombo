@@ -26,7 +26,7 @@ The game has two difficulty levels: EASY and HARD. In HARD mode, the speed of th
 
 Describe how to play the game:
 
-- Left/Right Arrow Keys: Move cursor, move numbers.
+- Left/Right Arrow Keys: Move the cursor, move numbers.
 - Up/Down Arrow Keys: Select, rotate numbers.
 - Space Key: Drop numbers.
 
